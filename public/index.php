@@ -23,6 +23,7 @@ require_once __DIR__ . '/../app/controllers/BookController.php';
 require_once __DIR__ . '/../app/controllers/ReservationController.php';
 require_once __DIR__ . '/../app/controllers/LoanController.php';
 require_once __DIR__ . '/../app/controllers/AuthorController.php';
+require_once __DIR__ . '/../app/controllers/PublisherController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +106,7 @@ function renderHeader(string $title): void
                         <a href="<?= e(url('/admin')) ?>">Panel admina</a>
                         <a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a>
                         <a href="<?= e(url('/admin/authors')) ?>">Autorzy</a>
+                        <a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a>
                     <?php endif; ?>
 
                     <a href="<?= e(url('/logout')) ?>">Wyloguj</a>
@@ -219,6 +221,7 @@ switch ($route) {
         <ul>
             <li><a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a></li>
             <li><a href="<?= e(url('/admin/authors')) ?>">Autorzy</a></li>
+            <li><a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a></li>
         </ul>
         <?php
         renderFooter();
@@ -263,6 +266,26 @@ switch ($route) {
     case '/admin/authors/delete':
         $authorController = new AuthorController($pdo);
         $authorController->delete();
+        break;
+
+    case '/admin/publishers':
+        $publisherController = new PublisherController($pdo);
+        $publisherController->index();
+        break;
+
+    case '/admin/publishers/create':
+        $publisherController = new PublisherController($pdo);
+        $publisherController->create();
+        break;
+
+    case '/admin/publishers/edit':
+        $publisherController = new PublisherController($pdo);
+        $publisherController->edit();
+        break;
+
+    case '/admin/publishers/delete':
+        $publisherController = new PublisherController($pdo);
+        $publisherController->delete();
         break;
 
     default:
