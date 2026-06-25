@@ -24,6 +24,7 @@ require_once __DIR__ . '/../app/controllers/ReservationController.php';
 require_once __DIR__ . '/../app/controllers/LoanController.php';
 require_once __DIR__ . '/../app/controllers/AuthorController.php';
 require_once __DIR__ . '/../app/controllers/PublisherController.php';
+require_once __DIR__ . '/../app/controllers/AdminBookController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -107,6 +108,7 @@ function renderHeader(string $title): void
                         <a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a>
                         <a href="<?= e(url('/admin/authors')) ?>">Autorzy</a>
                         <a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a>
+                        <a href="<?= e(url('/admin/books')) ?>">Książki</a>
                     <?php endif; ?>
 
                     <a href="<?= e(url('/logout')) ?>">Wyloguj</a>
@@ -222,6 +224,7 @@ switch ($route) {
             <li><a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a></li>
             <li><a href="<?= e(url('/admin/authors')) ?>">Autorzy</a></li>
             <li><a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a></li>
+            <li><a href="<?= e(url('/admin/books')) ?>">Książki</a></li>
         </ul>
         <?php
         renderFooter();
@@ -286,6 +289,26 @@ switch ($route) {
     case '/admin/publishers/delete':
         $publisherController = new PublisherController($pdo);
         $publisherController->delete();
+        break;
+
+    case '/admin/books':
+        $adminBookController = new AdminBookController($pdo);
+        $adminBookController->index();
+        break;
+
+    case '/admin/books/create':
+        $adminBookController = new AdminBookController($pdo);
+        $adminBookController->create();
+        break;
+
+    case '/admin/books/edit':
+        $adminBookController = new AdminBookController($pdo);
+        $adminBookController->edit();
+        break;
+
+    case '/admin/books/delete':
+        $adminBookController = new AdminBookController($pdo);
+        $adminBookController->delete();
         break;
 
     default:
