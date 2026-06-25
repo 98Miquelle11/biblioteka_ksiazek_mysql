@@ -11,6 +11,22 @@ declare(strict_types=1);
 | jaką stronę pokazać użytkownikowi.
 */
 
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+
+set_error_handler(function (
+    int $severity,
+    string $message,
+    string $file,
+    int $line
+): bool {
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
 require_once __DIR__ . '/../app/helpers/security.php';
 require_once __DIR__ . '/../app/helpers/session.php';
 require_once __DIR__ . '/../app/helpers/login_attempts.php';
@@ -52,6 +68,35 @@ function url(string $path = ''): string
     }
 
     return $basePath . $path;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Logowanie błędów
+|--------------------------------------------------------------------------
+*/
+
+function logApplicationError(Throwable $exception): void
+{
+    $logsDirectory = __DIR__ . '/../logs';
+    $logFile = $logsDirectory . '/errors.log';
+
+    if (!is_dir($logsDirectory)) {
+        mkdir($logsDirectory, 0777, true);
+    }
+
+    $message = '[' . date('Y-m-d H:i:s') . '] '
+        . get_class($exception) . ': '
+        . $exception->getMessage()
+        . ' in ' . $exception->getFile()
+        . ':' . $exception->getLine()
+        . PHP_EOL
+        . $exception->getTraceAsString()
+        . PHP_EOL
+        . str_repeat('-', 80)
+        . PHP_EOL;
+
+    file_put_contents($logFile, $message, FILE_APPEND);
 }
 
 /*
@@ -150,199 +195,202 @@ function renderFooter(): void
 |--------------------------------------------------------------------------
 */
 
-switch ($route) {
-    case '/':
-        renderHeader('Strona główna');
-        ?>
-        <h2>Strona główna</h2>
-        <p>To jest projekt biblioteki książek w PHP i MySQL.</p>
-        <p>Ten plik działa jako główny router aplikacji.</p>
-        <?php
-        renderFooter();
-        break;
+try {
+    switch ($route) {
+        case '/':
+            renderHeader('Strona główna');
+            ?>
+            <h2>Strona główna</h2>
+            <p>To jest projekt biblioteki książek w PHP i MySQL.</p>
+            <p>Ten plik działa jako główny router aplikacji.</p>
+            <?php
+            renderFooter();
+            break;
 
-    case '/books':
-        BookController::index($pdo);
-        break;
+        case '/books':
+            BookController::index($pdo);
+            break;
 
-    case '/books/show':
-        BookController::show($pdo);
-        break;
+        case '/books/show':
+            BookController::show($pdo);
+            break;
 
-    case '/reservations/create':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            ReservationController::create($pdo);
-        } else {
-            header('Location: ' . url('/books'));
-            exit;
-        }
-        break;
+        case '/reservations/create':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                ReservationController::create($pdo);
+            } else {
+                header('Location: ' . url('/books'));
+                exit;
+            }
+            break;
 
-    case '/register':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            AuthController::register($pdo);
-        } else {
-            AuthController::showRegisterForm();
-        }
-        break;
+        case '/register':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                AuthController::register($pdo);
+            } else {
+                AuthController::showRegisterForm();
+            }
+            break;
 
-    case '/login':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            AuthController::login($pdo);
-        } else {
-            AuthController::showLoginForm();
-        }
-        break;
+        case '/login':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                AuthController::login($pdo);
+            } else {
+                AuthController::showLoginForm();
+            }
+            break;
 
-    case '/logout':
-        AuthController::logout();
-        break;
+        case '/logout':
+            AuthController::logout();
+            break;
 
-    case '/profile':
-        ProfileController::show($pdo);
-        break;
+        case '/profile':
+            ProfileController::show($pdo);
+            break;
 
-    case '/profile/edit':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            ProfileController::update($pdo);
-        } else {
-            ProfileController::edit($pdo);
-        }
-        break;
+        case '/profile/edit':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                ProfileController::update($pdo);
+            } else {
+                ProfileController::edit($pdo);
+            }
+            break;
 
-    case '/profile/password':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            ProfileController::updatePassword($pdo);
-        } else {
-            ProfileController::passwordForm();
-        }
-        break;
+        case '/profile/password':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                ProfileController::updatePassword($pdo);
+            } else {
+                ProfileController::passwordForm();
+            }
+            break;
 
-    case '/profile/loans':
-        $profileActivityController = new ProfileActivityController($pdo);
-        $profileActivityController->loans();
-        break;
+        case '/profile/loans':
+            $profileActivityController = new ProfileActivityController($pdo);
+            $profileActivityController->loans();
+            break;
 
-    case '/profile/reservations':
-        $profileActivityController = new ProfileActivityController($pdo);
-        $profileActivityController->reservations();
-        break;
+        case '/profile/reservations':
+            $profileActivityController = new ProfileActivityController($pdo);
+            $profileActivityController->reservations();
+            break;
 
-    case '/admin':
-        $adminDashboardController = new AdminDashboardController($pdo);
-        $adminDashboardController->index();
-        break;
+        case '/admin':
+            $adminDashboardController = new AdminDashboardController($pdo);
+            $adminDashboardController->index();
+            break;
 
-    case '/admin/loans':
-        LoanController::index($pdo);
-        break;
+        case '/admin/loans':
+            LoanController::index($pdo);
+            break;
 
-    case '/admin/loans/create':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            LoanController::store($pdo);
-        } else {
-            LoanController::createForm($pdo);
-        }
-        break;
+        case '/admin/loans/create':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                LoanController::store($pdo);
+            } else {
+                LoanController::createForm($pdo);
+            }
+            break;
 
-    case '/admin/loans/return':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            LoanController::returnLoan($pdo);
-        } else {
-            header('Location: ' . url('/admin/loans'));
-            exit;
-        }
-        break;
+        case '/admin/loans/return':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                LoanController::returnLoan($pdo);
+            } else {
+                header('Location: ' . url('/admin/loans'));
+                exit;
+            }
+            break;
 
-    case '/admin/authors':
-        $authorController = new AuthorController($pdo);
-        $authorController->index();
-        break;
+        case '/admin/authors':
+            $authorController = new AuthorController($pdo);
+            $authorController->index();
+            break;
 
-    case '/admin/authors/create':
-        $authorController = new AuthorController($pdo);
-        $authorController->create();
-        break;
+        case '/admin/authors/create':
+            $authorController = new AuthorController($pdo);
+            $authorController->create();
+            break;
 
-    case '/admin/authors/edit':
-        $authorController = new AuthorController($pdo);
-        $authorController->edit();
-        break;
+        case '/admin/authors/edit':
+            $authorController = new AuthorController($pdo);
+            $authorController->edit();
+            break;
 
-    case '/admin/authors/delete':
-        $authorController = new AuthorController($pdo);
-        $authorController->delete();
-        break;
+        case '/admin/authors/delete':
+            $authorController = new AuthorController($pdo);
+            $authorController->delete();
+            break;
 
-    case '/admin/publishers':
-        $publisherController = new PublisherController($pdo);
-        $publisherController->index();
-        break;
+        case '/admin/publishers':
+            $publisherController = new PublisherController($pdo);
+            $publisherController->index();
+            break;
 
-    case '/admin/publishers/create':
-        $publisherController = new PublisherController($pdo);
-        $publisherController->create();
-        break;
+        case '/admin/publishers/create':
+            $publisherController = new PublisherController($pdo);
+            $publisherController->create();
+            break;
 
-    case '/admin/publishers/edit':
-        $publisherController = new PublisherController($pdo);
-        $publisherController->edit();
-        break;
+        case '/admin/publishers/edit':
+            $publisherController = new PublisherController($pdo);
+            $publisherController->edit();
+            break;
 
-    case '/admin/publishers/delete':
-        $publisherController = new PublisherController($pdo);
-        $publisherController->delete();
-        break;
+        case '/admin/publishers/delete':
+            $publisherController = new PublisherController($pdo);
+            $publisherController->delete();
+            break;
 
-    case '/admin/books':
-        $adminBookController = new AdminBookController($pdo);
-        $adminBookController->index();
-        break;
+        case '/admin/books':
+            $adminBookController = new AdminBookController($pdo);
+            $adminBookController->index();
+            break;
 
-    case '/admin/books/create':
-        $adminBookController = new AdminBookController($pdo);
-        $adminBookController->create();
-        break;
+        case '/admin/books/create':
+            $adminBookController = new AdminBookController($pdo);
+            $adminBookController->create();
+            break;
 
-    case '/admin/books/edit':
-        $adminBookController = new AdminBookController($pdo);
-        $adminBookController->edit();
-        break;
+        case '/admin/books/edit':
+            $adminBookController = new AdminBookController($pdo);
+            $adminBookController->edit();
+            break;
 
-    case '/admin/books/delete':
-        $adminBookController = new AdminBookController($pdo);
-        $adminBookController->delete();
-        break;
+        case '/admin/books/delete':
+            $adminBookController = new AdminBookController($pdo);
+            $adminBookController->delete();
+            break;
 
-    case '/admin/copies':
-        $adminCopyController = new AdminCopyController($pdo);
-        $adminCopyController->index();
-        break;
+        case '/admin/copies':
+            $adminCopyController = new AdminCopyController($pdo);
+            $adminCopyController->index();
+            break;
 
-    case '/admin/copies/create':
-        $adminCopyController = new AdminCopyController($pdo);
-        $adminCopyController->create();
-        break;
+        case '/admin/copies/create':
+            $adminCopyController = new AdminCopyController($pdo);
+            $adminCopyController->create();
+            break;
 
-    case '/admin/copies/edit':
-        $adminCopyController = new AdminCopyController($pdo);
-        $adminCopyController->edit();
-        break;
+        case '/admin/copies/edit':
+            $adminCopyController = new AdminCopyController($pdo);
+            $adminCopyController->edit();
+            break;
 
-    case '/admin/copies/delete':
-        $adminCopyController = new AdminCopyController($pdo);
-        $adminCopyController->delete();
-        break;
+        case '/admin/copies/delete':
+            $adminCopyController = new AdminCopyController($pdo);
+            $adminCopyController->delete();
+            break;
 
-    default:
-        http_response_code(404);
+        default:
+            http_response_code(404);
+            require __DIR__ . '/../app/views/errors/404.php';
+            break;
+    }
+} catch (Throwable $exception) {
+    logApplicationError($exception);
 
-        renderHeader('404');
-        ?>
-        <h2>404 - Nie znaleziono strony</h2>
-        <p>Adres, który próbujesz otworzyć, nie istnieje.</p>
-        <p><a href="<?= e(url('/')) ?>">Wróć na stronę główną</a></p>
-        <?php
-        renderFooter();
-        break;
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+
+    require __DIR__ . '/../app/views/errors/500.php';
 }
