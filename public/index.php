@@ -15,6 +15,10 @@ require_once __DIR__ . '/../app/helpers/security.php';
 require_once __DIR__ . '/../app/helpers/session.php';
 require_once __DIR__ . '/../app/helpers/login_attempts.php';
 
+$pdo = require __DIR__ . '/../config/database.php';
+
+require_once __DIR__ . '/../app/controllers/AuthController.php';
+
 /*
 |--------------------------------------------------------------------------
 | Podstawowe ustawienia
@@ -35,7 +39,7 @@ function url(string $path = ''): string
 {
     global $basePath;
 
-    if ($path === '/') {
+    if ($path === '' || $path === '/') {
         return $basePath;
     }
 
@@ -63,6 +67,10 @@ $route = str_replace($basePath, '', $requestUri);
 
 if ($route === '') {
     $route = '/';
+}
+
+if ($route !== '/') {
+    $route = rtrim($route, '/');
 }
 
 /*
@@ -117,6 +125,8 @@ function renderFooter(): void
         <footer>
             <p>&copy; <?= date('Y') ?> Biblioteka książek</p>
         </footer>
+
+        <script src="<?= e(url('/js/validation.js')) ?>"></script>
     </body>
     </html>
     <?php
@@ -152,10 +162,15 @@ switch ($route) {
     case '/login':
         renderHeader('Logowanie');
         ?>
+
         <h2>Logowanie</h2>
 
+        <?php if (isset($_GET['registered']) && $_GET['registered'] === '1'): ?>
+            <p style="color: green;">Konto zostało utworzone. Możesz się teraz zalogować.</p>
+        <?php endif; ?>
+
         <form method="POST" action="<?= e(url('/login')) ?>">
-            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
 
             <div>
                 <label for="email">Email</label><br>
@@ -171,54 +186,17 @@ switch ($route) {
         </form>
 
         <p>Obsługę logowania dodamy w kolejnym kroku.</p>
+
         <?php
         renderFooter();
         break;
 
     case '/register':
-        renderHeader('Rejestracja');
-        ?>
-        <h2>Rejestracja</h2>
-
-        <form method="POST" action="<?= e(url('/register')) ?>">
-            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-
-            <div>
-                <label for="imie">Imię</label><br>
-                <input type="text" id="imie" name="imie" required>
-            </div>
-
-            <div>
-                <label for="nazwisko">Nazwisko</label><br>
-                <input type="text" id="nazwisko" name="nazwisko" required>
-            </div>
-
-            <div>
-                <label for="email">Email</label><br>
-                <input type="email" id="email" name="email" required>
-            </div>
-
-            <div>
-                <label for="telefon">Telefon</label><br>
-                <input type="text" id="telefon" name="telefon">
-            </div>
-
-            <div>
-                <label for="password">Hasło</label><br>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <div>
-                <label for="password_confirm">Powtórz hasło</label><br>
-                <input type="password" id="password_confirm" name="password_confirm" required>
-            </div>
-
-            <button type="submit">Zarejestruj</button>
-        </form>
-
-        <p>Obsługę rejestracji dodamy w kolejnym kroku.</p>
-        <?php
-        renderFooter();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            AuthController::register($pdo);
+        } else {
+            AuthController::showRegisterForm();
+        }
         break;
 
     case '/profile':
@@ -228,7 +206,7 @@ switch ($route) {
         ?>
         <h2>Profil użytkownika</h2>
         <p>Ta strona będzie dostępna tylko po zalogowaniu.</p>
-        <p>Email użytkownika z sesji: <?= e($_SESSION['user_email'] ?? '') ?></p>
+        <p>Email użytkownika z sesji: <?= e(currentUserEmail()) ?></p>
         <?php
         renderFooter();
         break;
