@@ -1,0 +1,13 @@
+config/.env
+.env
+node_modules/
+vendor/
+logs/*.log
+.DS_Store
+Thumbs.db
+*.tmp
+*.cache
+
+# .env nie może trafić na repozytorium, ponieważ będzie tam hasło do bazy.
+# logs/*.log, czyli automatyczne zapisy błędów/działań aplikacji, ne powinny być w repozytorium.
+# node_modules/ i vendor/ są wymagane w .gitignore.
