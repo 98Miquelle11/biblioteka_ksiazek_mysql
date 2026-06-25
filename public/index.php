@@ -19,6 +19,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/ProfileController.php';
+require_once __DIR__ . '/../app/controllers/ProfileActivityController.php';
 require_once __DIR__ . '/../app/controllers/BookController.php';
 require_once __DIR__ . '/../app/controllers/ReservationController.php';
 require_once __DIR__ . '/../app/controllers/LoanController.php';
@@ -26,6 +27,7 @@ require_once __DIR__ . '/../app/controllers/AuthorController.php';
 require_once __DIR__ . '/../app/controllers/PublisherController.php';
 require_once __DIR__ . '/../app/controllers/AdminBookController.php';
 require_once __DIR__ . '/../app/controllers/AdminCopyController.php';
+require_once __DIR__ . '/../app/controllers/AdminDashboardController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -103,6 +105,8 @@ function renderHeader(string $title): void
                     <a href="<?= e(url('/profile')) ?>">Profil</a>
                     <a href="<?= e(url('/profile/edit')) ?>">Edytuj profil</a>
                     <a href="<?= e(url('/profile/password')) ?>">Zmień hasło</a>
+                    <a href="<?= e(url('/profile/loans')) ?>">Moje wypożyczenia</a>
+                    <a href="<?= e(url('/profile/reservations')) ?>">Moje rezerwacje</a>
 
                     <?php if (isAdmin()): ?>
                         <a href="<?= e(url('/admin')) ?>">Panel admina</a>
@@ -214,23 +218,19 @@ switch ($route) {
         }
         break;
 
+    case '/profile/loans':
+        $profileActivityController = new ProfileActivityController($pdo);
+        $profileActivityController->loans();
+        break;
+
+    case '/profile/reservations':
+        $profileActivityController = new ProfileActivityController($pdo);
+        $profileActivityController->reservations();
+        break;
+
     case '/admin':
-        requireAdmin();
-
-        renderHeader('Panel administratora');
-        ?>
-        <h2>Panel administratora</h2>
-        <p>Ta strona jest dostępna tylko dla użytkownika z rolą admin.</p>
-
-        <ul>
-            <li><a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a></li>
-            <li><a href="<?= e(url('/admin/authors')) ?>">Autorzy</a></li>
-            <li><a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a></li>
-            <li><a href="<?= e(url('/admin/books')) ?>">Książki</a></li>
-            <li><a href="<?= e(url('/admin/copies')) ?>">Egzemplarze</a></li>
-        </ul>
-        <?php
-        renderFooter();
+        $adminDashboardController = new AdminDashboardController($pdo);
+        $adminDashboardController->index();
         break;
 
     case '/admin/loans':
