@@ -7,7 +7,7 @@ declare(strict_types=1);
 | Główny plik aplikacji
 |--------------------------------------------------------------------------
 | Ten plik jest punktem wejścia do aplikacji.
-| To znaczy: przeglądarka trafia tutaj, a ten plik decyduje,
+| Przeglądarka trafia tutaj, a ten plik decyduje,
 | jaką stronę pokazać użytkownikowi.
 */
 
@@ -31,8 +31,6 @@ $basePath = '/biblioteka_ksiazek_mysql/public';
 |--------------------------------------------------------------------------
 | Funkcja do tworzenia linków
 |--------------------------------------------------------------------------
-| Dzięki temu nie musimy wszędzie ręcznie pisać:
-| /biblioteka_ksiazek_mysql/public
 */
 
 function url(string $path = ''): string
@@ -50,11 +48,6 @@ function url(string $path = ''): string
 |--------------------------------------------------------------------------
 | Pobranie aktualnej ścieżki URL
 |--------------------------------------------------------------------------
-| Przykład:
-| http://localhost/biblioteka_ksiazek_mysql/public/books
-|
-| Z tego zostanie wyciągnięte:
-| /books
 */
 
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -136,7 +129,6 @@ function renderFooter(): void
 |--------------------------------------------------------------------------
 | Routing
 |--------------------------------------------------------------------------
-| Tutaj decydujemy, co pokazać dla konkretnego adresu.
 */
 
 switch ($route) {
@@ -159,38 +151,6 @@ switch ($route) {
         renderFooter();
         break;
 
-    case '/login':
-        renderHeader('Logowanie');
-        ?>
-
-        <h2>Logowanie</h2>
-
-        <?php if (isset($_GET['registered']) && $_GET['registered'] === '1'): ?>
-            <p style="color: green;">Konto zostało utworzone. Możesz się teraz zalogować.</p>
-        <?php endif; ?>
-
-        <form method="POST" action="<?= e(url('/login')) ?>">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-
-            <div>
-                <label for="email">Email</label><br>
-                <input type="email" id="email" name="email" required>
-            </div>
-
-            <div>
-                <label for="password">Hasło</label><br>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <button type="submit">Zaloguj</button>
-        </form>
-
-        <p>Obsługę logowania dodamy w kolejnym kroku.</p>
-
-        <?php
-        renderFooter();
-        break;
-
     case '/register':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             AuthController::register($pdo);
@@ -199,14 +159,26 @@ switch ($route) {
         }
         break;
 
+    case '/login':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            AuthController::login($pdo);
+        } else {
+            AuthController::showLoginForm();
+        }
+        break;
+
+    case '/logout':
+        AuthController::logout();
+        break;
+
     case '/profile':
         requireLogin();
 
         renderHeader('Profil użytkownika');
         ?>
         <h2>Profil użytkownika</h2>
-        <p>Ta strona będzie dostępna tylko po zalogowaniu.</p>
-        <p>Email użytkownika z sesji: <?= e(currentUserEmail()) ?></p>
+        <p>Ta strona jest dostępna tylko po zalogowaniu.</p>
+        <p>Email użytkownika z sesji: <?= e($_SESSION['user_email'] ?? '') ?></p>
         <?php
         renderFooter();
         break;
@@ -217,15 +189,10 @@ switch ($route) {
         renderHeader('Panel administratora');
         ?>
         <h2>Panel administratora</h2>
-        <p>Ta strona będzie dostępna tylko dla użytkownika z rolą admin.</p>
+        <p>Ta strona jest dostępna tylko dla użytkownika z rolą admin.</p>
         <?php
         renderFooter();
         break;
-
-    case '/logout':
-        logoutUser();
-        header('Location: ' . url('/login'));
-        exit;
 
     default:
         http_response_code(404);

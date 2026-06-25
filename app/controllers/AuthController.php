@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-/* Ten plik obsługuje rejestrację: waliduje dane, sprawdza email, hashuje hasło
-i zapisuje użytkownika. */
-
 require_once __DIR__ . '/../models/User.php';
 
 class AuthController
@@ -84,6 +81,90 @@ class AuthController
         ]);
 
         header('Location: ' . url('/login') . '?registered=1');
+        exit;
+    }
+
+    public static function showLoginForm(): void
+    {
+        $errors = [];
+        $old = [
+            'email' => '',
+        ];
+
+        $registered = isset($_GET['registered']) && $_GET['registered'] === '1';
+
+        require __DIR__ . '/../views/auth/login.php';
+    }
+
+    public static function login(PDO $pdo): void
+    {
+        requireValidCsrfToken();
+
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        $errors = [];
+
+        $old = [
+            'email' => $email,
+        ];
+
+        $registered = false;
+
+        if ($email === '') {
+            $errors[] = 'Email jest wymagany.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Email ma niepoprawny format.';
+        }
+
+        if ($password === '') {
+            $errors[] = 'Hasło jest wymagane.';
+        }
+
+        if (!empty($errors)) {
+            require __DIR__ . '/../views/auth/login.php';
+            return;
+        }
+
+        $user = User::findByEmail($pdo, $email);
+
+        if (!$user) {
+            $errors[] = 'Nieprawidłowy email lub hasło.';
+            require __DIR__ . '/../views/auth/login.php';
+            return;
+        }
+
+        if (isAccountBlocked($user)) {
+            $errors[] = getAccountBlockMessage($user);
+            require __DIR__ . '/../views/auth/login.php';
+            return;
+        }
+
+        if (!verifyPassword($password, $user['password_hash'])) {
+            registerFailedLogin($pdo, $user);
+
+            $errors[] = 'Nieprawidłowy email lub hasło.';
+            require __DIR__ . '/../views/auth/login.php';
+            return;
+        }
+
+        clearFailedLogins($pdo, (int) $user['id_czytelnik']);
+        loginUser($user);
+
+        if ($user['rola'] === 'admin') {
+            header('Location: ' . url('/admin'));
+            exit;
+        }
+
+        header('Location: ' . url('/profile'));
+        exit;
+    }
+
+    public static function logout(): void
+    {
+        logoutUser();
+
+        header('Location: ' . url('/login'));
         exit;
     }
 }
