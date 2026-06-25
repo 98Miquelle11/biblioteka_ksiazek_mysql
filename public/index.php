@@ -20,6 +20,8 @@ $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/ProfileController.php';
 require_once __DIR__ . '/../app/controllers/BookController.php';
+require_once __DIR__ . '/../app/controllers/ReservationController.php';
+require_once __DIR__ . '/../app/controllers/LoanController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +102,7 @@ function renderHeader(string $title): void
 
                     <?php if (isAdmin()): ?>
                         <a href="<?= e(url('/admin')) ?>">Panel admina</a>
+                        <a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a>
                     <?php endif; ?>
 
                     <a href="<?= e(url('/logout')) ?>">Wyloguj</a>
@@ -150,6 +153,19 @@ switch ($route) {
         BookController::index($pdo);
         break;
 
+    case '/books/show':
+        BookController::show($pdo);
+        break;
+
+    case '/reservations/create':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            ReservationController::create($pdo);
+        } else {
+            header('Location: ' . url('/books'));
+            exit;
+        }
+        break;
+
     case '/register':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             AuthController::register($pdo);
@@ -197,8 +213,33 @@ switch ($route) {
         ?>
         <h2>Panel administratora</h2>
         <p>Ta strona jest dostępna tylko dla użytkownika z rolą admin.</p>
+
+        <ul>
+            <li><a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a></li>
+        </ul>
         <?php
         renderFooter();
+        break;
+
+    case '/admin/loans':
+        LoanController::index($pdo);
+        break;
+
+    case '/admin/loans/create':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            LoanController::store($pdo);
+        } else {
+            LoanController::createForm($pdo);
+        }
+        break;
+
+    case '/admin/loans/return':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            LoanController::returnLoan($pdo);
+        } else {
+            header('Location: ' . url('/admin/loans'));
+            exit;
+        }
         break;
 
     default:

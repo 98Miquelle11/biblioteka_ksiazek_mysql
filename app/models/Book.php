@@ -27,6 +27,68 @@ class Book
         return $stmt->fetchAll();
     }
 
+    public static function findById(PDO $pdo, int $bookId): ?array
+    {
+        $stmt = $pdo->prepare("
+            SELECT
+                ksiazka.id_ksiazka,
+                ksiazka.tytul,
+                GROUP_CONCAT(DISTINCT CONCAT(autor.imie, ' ', autor.nazwisko) ORDER BY autor.nazwisko SEPARATOR ', ') AS autorzy,
+                GROUP_CONCAT(DISTINCT gatunek.nazwa ORDER BY gatunek.nazwa SEPARATOR ', ') AS gatunki
+            FROM ksiazka
+            LEFT JOIN autor_ksiazka 
+                ON ksiazka.id_ksiazka = autor_ksiazka.id_ksiazka
+            LEFT JOIN autor 
+                ON autor_ksiazka.id_autor = autor.id_autor
+            LEFT JOIN gatunek_ksiazka 
+                ON ksiazka.id_ksiazka = gatunek_ksiazka.id_ksiazka
+            LEFT JOIN gatunek 
+                ON gatunek_ksiazka.id_gatunek = gatunek.id_gatunek
+            WHERE ksiazka.id_ksiazka = :id_ksiazka
+            GROUP BY ksiazka.id_ksiazka, ksiazka.tytul
+            LIMIT 1
+        ");
+
+        $stmt->execute([
+            'id_ksiazka' => $bookId,
+        ]);
+
+        $book = $stmt->fetch();
+
+        return $book ?: null;
+    }
+
+    public static function getCopiesByBookId(PDO $pdo, int $bookId): array
+    {
+        $stmt = $pdo->prepare("
+            SELECT
+                egzemplarz.id_egzemplarz,
+                egzemplarz.forma,
+                egzemplarz.uwaga,
+                wydanie.id_wydanie,
+                wydanie.isbn,
+                wydanie.rok_wydania,
+                wydanie.liczba_stron,
+                wydawnictwo.nazwa AS wydawnictwo,
+                status_egzemplarz.nazwa AS status_egzemplarza
+            FROM egzemplarz
+            INNER JOIN wydanie
+                ON egzemplarz.id_wydanie = wydanie.id_wydanie
+            INNER JOIN wydawnictwo
+                ON wydanie.id_wydawnictwo = wydawnictwo.id_wydawnictwo
+            INNER JOIN status_egzemplarz
+                ON egzemplarz.id_status_egzemplarz = status_egzemplarz.id_status_egzemplarz
+            WHERE wydanie.id_ksiazka = :id_ksiazka
+            ORDER BY egzemplarz.id_egzemplarz ASC
+        ");
+
+        $stmt->execute([
+            'id_ksiazka' => $bookId,
+        ]);
+
+        return $stmt->fetchAll();
+    }
+
     public static function countAll(PDO $pdo, array $filters): int
     {
         $sql = "

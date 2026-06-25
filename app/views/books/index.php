@@ -91,6 +91,7 @@
                 <th>Rok wydania</th>
                 <th>Forma</th>
                 <th>Status</th>
+                <th>Szczegóły</th>
             </tr>
         </thead>
 
@@ -104,6 +105,11 @@
                     <td><?= e($book['rok_wydania']) ?></td>
                     <td><?= e($book['forma']) ?></td>
                     <td><?= e($book['status_egzemplarza']) ?></td>
+                    <td>
+                        <a href="<?= e(url('/books/show') . '?id=' . $book['id_ksiazka']) ?>">
+                            Zobacz
+                        </a>
+                    </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -114,21 +120,15 @@
     <nav>
         <p>Strony:</p>
 
-        <?php
-        $queryParams = $_GET;
-        ?>
+        <?php $queryParams = $_GET; ?>
 
         <?php if ($page > 1): ?>
-            <?php
-            $queryParams['page'] = $page - 1;
-            ?>
+            <?php $queryParams['page'] = $page - 1; ?>
             <a href="<?= e(url('/books') . '?' . http_build_query($queryParams)) ?>">Poprzednia</a>
         <?php endif; ?>
 
         <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <?php
-            $queryParams['page'] = $i;
-            ?>
+            <?php $queryParams['page'] = $i; ?>
 
             <?php if ($i === $page): ?>
                 <strong><?= e($i) ?></strong>
@@ -138,9 +138,7 @@
         <?php endfor; ?>
 
         <?php if ($page < $totalPages): ?>
-            <?php
-            $queryParams['page'] = $page + 1;
-            ?>
+            <?php $queryParams['page'] = $page + 1; ?>
             <a href="<?= e(url('/books') . '?' . http_build_query($queryParams)) ?>">Następna</a>
         <?php endif; ?>
     </nav>

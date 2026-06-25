@@ -15,7 +15,6 @@ class BookController
         }
 
         $limit = 10;
-        $offset = ($page - 1) * $limit;
 
         $filters = [
             'q' => trim($_GET['q'] ?? ''),
@@ -30,8 +29,43 @@ class BookController
         $totalBooks = Book::countAll($pdo, $filters);
         $totalPages = (int) ceil($totalBooks / $limit);
 
+        if ($totalPages > 0 && $page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $offset = ($page - 1) * $limit;
+
         $books = Book::getPaginated($pdo, $filters, $limit, $offset);
 
         require __DIR__ . '/../views/books/index.php';
+    }
+
+    public static function show(PDO $pdo): void
+    {
+        $bookId = (int) ($_GET['id'] ?? 0);
+
+        if ($bookId <= 0) {
+            http_response_code(404);
+            renderHeader('404');
+            echo '<h2>404 - Nie znaleziono książki</h2>';
+            echo '<p><a href="' . e(url('/books')) . '">Wróć do katalogu</a></p>';
+            renderFooter();
+            return;
+        }
+
+        $book = Book::findById($pdo, $bookId);
+
+        if (!$book) {
+            http_response_code(404);
+            renderHeader('404');
+            echo '<h2>404 - Nie znaleziono książki</h2>';
+            echo '<p><a href="' . e(url('/books')) . '">Wróć do katalogu</a></p>';
+            renderFooter();
+            return;
+        }
+
+        $copies = Book::getCopiesByBookId($pdo, $bookId);
+
+        require __DIR__ . '/../views/books/show.php';
     }
 }
