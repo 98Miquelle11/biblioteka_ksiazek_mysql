@@ -36,29 +36,8 @@ class AuthorController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             requireValidCsrfToken();
 
-            $old['imie'] = trim($_POST['imie'] ?? '');
-            $old['nazwisko'] = trim($_POST['nazwisko'] ?? '');
-            $old['narodowosc'] = trim($_POST['narodowosc'] ?? '');
-
-            if ($old['imie'] === '') {
-                $errors[] = 'Imię autora jest wymagane.';
-            }
-
-            if ($old['nazwisko'] === '') {
-                $errors[] = 'Nazwisko autora jest wymagane.';
-            }
-
-            if (mb_strlen($old['imie']) > 100) {
-                $errors[] = 'Imię autora jest za długie.';
-            }
-
-            if (mb_strlen($old['nazwisko']) > 100) {
-                $errors[] = 'Nazwisko autora jest za długie.';
-            }
-
-            if (mb_strlen($old['narodowosc']) > 100) {
-                $errors[] = 'Narodowość autora jest za długa.';
-            }
+            $old = $this->prepareFormData($_POST);
+            $errors = $this->validate($old);
 
             if (empty($errors)) {
                 $this->authorModel->create(
@@ -95,37 +74,16 @@ class AuthorController
 
         $errors = [];
         $old = [
-            'imie' => $author['imie'] ?? '',
-            'nazwisko' => $author['nazwisko'] ?? '',
-            'narodowosc' => $author['narodowosc'] ?? '',
+            'imie' => (string)($author['imie'] ?? ''),
+            'nazwisko' => (string)($author['nazwisko'] ?? ''),
+            'narodowosc' => (string)($author['narodowosc'] ?? ''),
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             requireValidCsrfToken();
 
-            $old['imie'] = trim($_POST['imie'] ?? '');
-            $old['nazwisko'] = trim($_POST['nazwisko'] ?? '');
-            $old['narodowosc'] = trim($_POST['narodowosc'] ?? '');
-
-            if ($old['imie'] === '') {
-                $errors[] = 'Imię autora jest wymagane.';
-            }
-
-            if ($old['nazwisko'] === '') {
-                $errors[] = 'Nazwisko autora jest wymagane.';
-            }
-
-            if (mb_strlen($old['imie']) > 100) {
-                $errors[] = 'Imię autora jest za długie.';
-            }
-
-            if (mb_strlen($old['nazwisko']) > 100) {
-                $errors[] = 'Nazwisko autora jest za długie.';
-            }
-
-            if (mb_strlen($old['narodowosc']) > 100) {
-                $errors[] = 'Narodowość autora jest za długa.';
-            }
+            $old = $this->prepareFormData($_POST);
+            $errors = $this->validate($old);
 
             if (empty($errors)) {
                 $this->authorModel->update(
@@ -168,5 +126,37 @@ class AuthorController
         }
 
         redirect(url('/admin/authors'));
+    }
+
+    private function prepareFormData(array $data): array
+    {
+        return [
+            'imie' => trim((string)($data['imie'] ?? '')),
+            'nazwisko' => trim((string)($data['nazwisko'] ?? '')),
+            'narodowosc' => trim((string)($data['narodowosc'] ?? '')),
+        ];
+    }
+
+    private function validate(array $data): array
+    {
+        $errors = [];
+
+        if ($data['imie'] === '') {
+            $errors[] = 'Imię autora jest wymagane.';
+        } elseif (mb_strlen($data['imie']) > 100) {
+            $errors[] = 'Imię autora może mieć maksymalnie 100 znaków.';
+        }
+
+        if ($data['nazwisko'] === '') {
+            $errors[] = 'Nazwisko autora jest wymagane.';
+        } elseif (mb_strlen($data['nazwisko']) > 100) {
+            $errors[] = 'Nazwisko autora może mieć maksymalnie 100 znaków.';
+        }
+
+        if (mb_strlen($data['narodowosc']) > 100) {
+            $errors[] = 'Narodowość autora może mieć maksymalnie 100 znaków.';
+        }
+
+        return $errors;
     }
 }

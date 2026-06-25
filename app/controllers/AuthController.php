@@ -23,12 +23,12 @@ class AuthController
     {
         requireValidCsrfToken();
 
-        $imie = trim($_POST['imie'] ?? '');
-        $nazwisko = trim($_POST['nazwisko'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $telefon = trim($_POST['telefon'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $passwordConfirm = $_POST['password_confirm'] ?? '';
+        $imie = trim((string)($_POST['imie'] ?? ''));
+        $nazwisko = trim((string)($_POST['nazwisko'] ?? ''));
+        $email = mb_strtolower(trim((string)($_POST['email'] ?? '')));
+        $telefon = trim((string)($_POST['telefon'] ?? ''));
+        $password = (string)($_POST['password'] ?? '');
+        $passwordConfirm = (string)($_POST['password_confirm'] ?? '');
 
         $errors = [];
 
@@ -41,29 +41,47 @@ class AuthController
 
         if ($imie === '') {
             $errors[] = 'Imię jest wymagane.';
+        } elseif (mb_strlen($imie) > 100) {
+            $errors[] = 'Imię może mieć maksymalnie 100 znaków.';
         }
 
         if ($nazwisko === '') {
             $errors[] = 'Nazwisko jest wymagane.';
+        } elseif (mb_strlen($nazwisko) > 100) {
+            $errors[] = 'Nazwisko może mieć maksymalnie 100 znaków.';
         }
 
         if ($email === '') {
             $errors[] = 'Email jest wymagany.';
+        } elseif (mb_strlen($email) > 255) {
+            $errors[] = 'Email może mieć maksymalnie 255 znaków.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Email ma niepoprawny format.';
+        }
+
+        if ($telefon !== '') {
+            $phonePattern = '/^[0-9+\-\s]{7,20}$/';
+
+            if (!preg_match($phonePattern, $telefon)) {
+                $errors[] = 'Telefon może zawierać tylko cyfry, spacje, plus i myślniki oraz mieć od 7 do 20 znaków.';
+            }
         }
 
         if ($password === '') {
             $errors[] = 'Hasło jest wymagane.';
         } elseif (strlen($password) < 8) {
             $errors[] = 'Hasło musi mieć minimum 8 znaków.';
+        } elseif (strlen($password) > 255) {
+            $errors[] = 'Hasło jest za długie.';
         }
 
-        if ($password !== $passwordConfirm) {
+        if ($passwordConfirm === '') {
+            $errors[] = 'Powtórzenie hasła jest wymagane.';
+        } elseif ($password !== $passwordConfirm) {
             $errors[] = 'Hasła nie są takie same.';
         }
 
-        if ($email !== '' && User::findByEmail($pdo, $email)) {
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && User::findByEmail($pdo, $email)) {
             $errors[] = 'Konto z takim adresem email już istnieje.';
         }
 
@@ -100,8 +118,8 @@ class AuthController
     {
         requireValidCsrfToken();
 
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
+        $email = mb_strtolower(trim((string)($_POST['email'] ?? '')));
+        $password = (string)($_POST['password'] ?? '');
 
         $errors = [];
 
@@ -113,6 +131,8 @@ class AuthController
 
         if ($email === '') {
             $errors[] = 'Email jest wymagany.';
+        } elseif (mb_strlen($email) > 255) {
+            $errors[] = 'Email może mieć maksymalnie 255 znaków.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Email ma niepoprawny format.';
         }
@@ -148,7 +168,7 @@ class AuthController
             return;
         }
 
-        clearFailedLogins($pdo, (int) $user['id_czytelnik']);
+        clearFailedLogins($pdo, (int)$user['id_czytelnik']);
         loginUser($user);
 
         if ($user['rola'] === 'admin') {

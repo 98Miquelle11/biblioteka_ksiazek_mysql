@@ -35,20 +35,8 @@ class PublisherController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             requireValidCsrfToken();
 
-            $old['nazwa'] = trim($_POST['nazwa'] ?? '');
-            $old['siedziba'] = trim($_POST['siedziba'] ?? '');
-
-            if ($old['nazwa'] === '') {
-                $errors[] = 'Nazwa wydawnictwa jest wymagana.';
-            }
-
-            if (mb_strlen($old['nazwa']) > 150) {
-                $errors[] = 'Nazwa wydawnictwa jest za długa.';
-            }
-
-            if (mb_strlen($old['siedziba']) > 150) {
-                $errors[] = 'Siedziba wydawnictwa jest za długa.';
-            }
+            $old = $this->prepareFormData($_POST);
+            $errors = $this->validate($old);
 
             if (empty($errors)) {
                 $this->publisherModel->create(
@@ -84,27 +72,15 @@ class PublisherController
 
         $errors = [];
         $old = [
-            'nazwa' => $publisher['nazwa'] ?? '',
-            'siedziba' => $publisher['siedziba'] ?? '',
+            'nazwa' => (string)($publisher['nazwa'] ?? ''),
+            'siedziba' => (string)($publisher['siedziba'] ?? ''),
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             requireValidCsrfToken();
 
-            $old['nazwa'] = trim($_POST['nazwa'] ?? '');
-            $old['siedziba'] = trim($_POST['siedziba'] ?? '');
-
-            if ($old['nazwa'] === '') {
-                $errors[] = 'Nazwa wydawnictwa jest wymagana.';
-            }
-
-            if (mb_strlen($old['nazwa']) > 150) {
-                $errors[] = 'Nazwa wydawnictwa jest za długa.';
-            }
-
-            if (mb_strlen($old['siedziba']) > 150) {
-                $errors[] = 'Siedziba wydawnictwa jest za długa.';
-            }
+            $old = $this->prepareFormData($_POST);
+            $errors = $this->validate($old);
 
             if (empty($errors)) {
                 $this->publisherModel->update(
@@ -146,5 +122,30 @@ class PublisherController
         }
 
         redirect(url('/admin/publishers'));
+    }
+
+    private function prepareFormData(array $data): array
+    {
+        return [
+            'nazwa' => trim((string)($data['nazwa'] ?? '')),
+            'siedziba' => trim((string)($data['siedziba'] ?? '')),
+        ];
+    }
+
+    private function validate(array $data): array
+    {
+        $errors = [];
+
+        if ($data['nazwa'] === '') {
+            $errors[] = 'Nazwa wydawnictwa jest wymagana.';
+        } elseif (mb_strlen($data['nazwa']) > 150) {
+            $errors[] = 'Nazwa wydawnictwa może mieć maksymalnie 150 znaków.';
+        }
+
+        if (mb_strlen($data['siedziba']) > 150) {
+            $errors[] = 'Siedziba wydawnictwa może mieć maksymalnie 150 znaków.';
+        }
+
+        return $errors;
     }
 }

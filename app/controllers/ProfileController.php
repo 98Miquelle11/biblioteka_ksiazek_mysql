@@ -50,12 +50,12 @@ class ProfileController
         requireLogin();
         requireValidCsrfToken();
 
-        $userId = currentUserId();
+        $userId = (int)currentUserId();
 
-        $imie = trim($_POST['imie'] ?? '');
-        $nazwisko = trim($_POST['nazwisko'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $telefon = trim($_POST['telefon'] ?? '');
+        $imie = trim((string)($_POST['imie'] ?? ''));
+        $nazwisko = trim((string)($_POST['nazwisko'] ?? ''));
+        $email = mb_strtolower(trim((string)($_POST['email'] ?? '')));
+        $telefon = trim((string)($_POST['telefon'] ?? ''));
 
         $errors = [];
 
@@ -68,22 +68,38 @@ class ProfileController
 
         if ($imie === '') {
             $errors[] = 'Imię jest wymagane.';
+        } elseif (mb_strlen($imie) > 100) {
+            $errors[] = 'Imię może mieć maksymalnie 100 znaków.';
         }
 
         if ($nazwisko === '') {
             $errors[] = 'Nazwisko jest wymagane.';
+        } elseif (mb_strlen($nazwisko) > 100) {
+            $errors[] = 'Nazwisko może mieć maksymalnie 100 znaków.';
         }
 
         if ($email === '') {
             $errors[] = 'Email jest wymagany.';
+        } elseif (mb_strlen($email) > 255) {
+            $errors[] = 'Email może mieć maksymalnie 255 znaków.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Email ma niepoprawny format.';
         }
 
-        $existingUser = User::findByEmail($pdo, $email);
+        if ($telefon !== '') {
+            $phonePattern = '/^[0-9+\-\s]{7,20}$/';
 
-        if ($existingUser && (int) $existingUser['id_czytelnik'] !== $userId) {
-            $errors[] = 'Ten adres email jest już zajęty.';
+            if (!preg_match($phonePattern, $telefon)) {
+                $errors[] = 'Telefon może zawierać tylko cyfry, spacje, plus i myślniki oraz mieć od 7 do 20 znaków.';
+            }
+        }
+
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $existingUser = User::findByEmail($pdo, $email);
+
+            if ($existingUser && (int)$existingUser['id_czytelnik'] !== $userId) {
+                $errors[] = 'Ten adres email jest już zajęty.';
+            }
         }
 
         if (!empty($errors)) {
@@ -127,9 +143,9 @@ class ProfileController
             exit;
         }
 
-        $currentPassword = $_POST['current_password'] ?? '';
-        $newPassword = $_POST['new_password'] ?? '';
-        $newPasswordConfirm = $_POST['new_password_confirm'] ?? '';
+        $currentPassword = (string)($_POST['current_password'] ?? '');
+        $newPassword = (string)($_POST['new_password'] ?? '');
+        $newPasswordConfirm = (string)($_POST['new_password_confirm'] ?? '');
 
         $errors = [];
         $changed = false;
@@ -142,13 +158,17 @@ class ProfileController
             $errors[] = 'Nowe hasło jest wymagane.';
         } elseif (strlen($newPassword) < 8) {
             $errors[] = 'Nowe hasło musi mieć minimum 8 znaków.';
+        } elseif (strlen($newPassword) > 255) {
+            $errors[] = 'Nowe hasło jest za długie.';
         }
 
-        if ($newPassword !== $newPasswordConfirm) {
+        if ($newPasswordConfirm === '') {
+            $errors[] = 'Powtórzenie nowego hasła jest wymagane.';
+        } elseif ($newPassword !== $newPasswordConfirm) {
             $errors[] = 'Nowe hasła nie są takie same.';
         }
 
-        if (!verifyPassword($currentPassword, $user['password_hash'])) {
+        if ($currentPassword !== '' && !verifyPassword($currentPassword, $user['password_hash'])) {
             $errors[] = 'Obecne hasło jest nieprawidłowe.';
         }
 

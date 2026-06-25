@@ -42,10 +42,10 @@ class AdminCopyController
             requireValidCsrfToken();
 
             $copy = $this->prepareFormData($_POST);
-            $errors = $this->validate($copy);
+            $errors = $this->validate($copy, $editions, $statuses);
 
             if (empty($errors)) {
-                $this->copyModel->create($copy);
+                $this->copyModel->create($this->normalizeData($copy));
 
                 $_SESSION['success'] = 'Egzemplarz został dodany.';
                 redirect(url('/admin/copies'));
@@ -76,16 +76,23 @@ class AdminCopyController
         $errors = [];
         $editions = $this->copyModel->editionsForSelect();
         $statuses = $this->copyModel->statusesForSelect();
-        $copy = $existingCopy;
+
+        $copy = [
+            'id_wydanie' => (string)($existingCopy['id_wydanie'] ?? ''),
+            'forma' => (string)($existingCopy['forma'] ?? 'fizyczna'),
+            'id_status_egzemplarz' => (string)($existingCopy['id_status_egzemplarz'] ?? ''),
+            'cena_zakup' => (string)($existingCopy['cena_zakup'] ?? ''),
+            'uwaga' => (string)($existingCopy['uwaga'] ?? ''),
+        ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             requireValidCsrfToken();
 
             $copy = $this->prepareFormData($_POST);
-            $errors = $this->validate($copy);
+            $errors = $this->validate($copy, $editions, $statuses);
 
             if (empty($errors)) {
-                $this->copyModel->update($id, $copy);
+                $this->copyModel->update($id, $this->normalizeData($copy));
 
                 $_SESSION['success'] = 'Egzemplarz został zaktualizowany.';
                 redirect(url('/admin/copies'));
@@ -127,36 +134,50 @@ class AdminCopyController
         $price = str_replace(',', '.', trim((string)($data['cena_zakup'] ?? '')));
 
         return [
-            'id_wydanie' => (int)($data['id_wydanie'] ?? 0),
+            'id_wydanie' => trim((string)($data['id_wydanie'] ?? '')),
             'forma' => trim((string)($data['forma'] ?? '')),
-            'id_status_egzemplarz' => (int)($data['id_status_egzemplarz'] ?? 0),
+            'id_status_egzemplarz' => trim((string)($data['id_status_egzemplarz'] ?? '')),
             'cena_zakup' => $price,
             'uwaga' => trim((string)($data['uwaga'] ?? '')),
         ];
     }
 
-    private function validate(array $copy): array
+    private function validate(array $copy, array $editions, array $statuses): array
     {
         $errors = [];
 
-        if ($copy['id_wydanie'] <= 0) {
+        if ($copy['id_wydanie'] === '') {
             $errors[] = 'Wybierz wydanie książki.';
+        } elseif (!$this->isPositiveInteger($copy['id_wydanie'])) {
+            $errors[] = 'Wybrane wydanie książki jest nieprawidłowe.';
+        } elseif (!$this->idExistsInList((int)$copy['id_wydanie'], $editions, 'id_wydanie')) {
+            $errors[] = 'Wybrane wydanie książki nie istnieje.';
         }
 
         $allowedForms = ['fizyczna', 'ebook', 'audiobook'];
 
-        if (!in_array($copy['forma'], $allowedForms, true)) {
+        if ($copy['forma'] === '') {
+            $errors[] = 'Wybierz formę egzemplarza.';
+        } elseif (!in_array($copy['forma'], $allowedForms, true)) {
             $errors[] = 'Wybierz poprawną formę egzemplarza.';
         }
 
-        if ($copy['id_status_egzemplarz'] <= 0) {
+        if ($copy['id_status_egzemplarz'] === '') {
             $errors[] = 'Wybierz status egzemplarza.';
+        } elseif (!$this->isPositiveInteger($copy['id_status_egzemplarz'])) {
+            $errors[] = 'Wybrany status egzemplarza jest nieprawidłowy.';
+        } elseif (!$this->idExistsInList((int)$copy['id_status_egzemplarz'], $statuses, 'id_status_egzemplarz')) {
+            $errors[] = 'Wybrany status egzemplarza nie istnieje.';
         }
 
         if ($copy['cena_zakup'] === '') {
             $errors[] = 'Podaj cenę zakupu.';
-        } elseif (!is_numeric($copy['cena_zakup']) || (float)$copy['cena_zakup'] < 0) {
-            $errors[] = 'Cena zakupu musi być liczbą większą lub równą 0.';
+        } elseif (!preg_match('/^\d+(\.\d{1,2})?$/', $copy['cena_zakup'])) {
+            $errors[] = 'Cena zakupu musi być liczbą z maksymalnie dwoma miejscami po przecinku.';
+        } elseif ((float)$copy['cena_zakup'] < 0) {
+            $errors[] = 'Cena zakupu musi być większa lub równa 0.';
+        } elseif ((float)$copy['cena_zakup'] > 999999.99) {
+            $errors[] = 'Cena zakupu jest za wysoka.';
         }
 
         if (mb_strlen($copy['uwaga']) > 255) {
@@ -164,5 +185,32 @@ class AdminCopyController
         }
 
         return $errors;
+    }
+
+    private function normalizeData(array $copy): array
+    {
+        return [
+            'id_wydanie' => (int)$copy['id_wydanie'],
+            'forma' => $copy['forma'],
+            'id_status_egzemplarz' => (int)$copy['id_status_egzemplarz'],
+            'cena_zakup' => number_format((float)$copy['cena_zakup'], 2, '.', ''),
+            'uwaga' => $copy['uwaga'],
+        ];
+    }
+
+    private function isPositiveInteger(string $value): bool
+    {
+        return ctype_digit($value) && (int)$value > 0;
+    }
+
+    private function idExistsInList(int $id, array $items, string $idField): bool
+    {
+        foreach ($items as $item) {
+            if ((int)($item[$idField] ?? 0) === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
