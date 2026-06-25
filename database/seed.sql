@@ -159,6 +159,7 @@ INSERT INTO egzemplarz (id_wydanie, forma, cena_zakup, uwaga) VALUES
 (20, 'audiobook', 27.00, 'wersja audio');
 
 /* Hasło testowe dla wszystkich kont: password
+Pierwszy rekord to konto administratora, pozostałe to konta użytkowników.
 W aplikacji hasła powinny być generowane przez password_hash() / bcrypt. */
 INSERT INTO czytelnik (
     imie,
