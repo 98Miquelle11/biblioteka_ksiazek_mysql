@@ -25,6 +25,7 @@ require_once __DIR__ . '/../app/controllers/LoanController.php';
 require_once __DIR__ . '/../app/controllers/AuthorController.php';
 require_once __DIR__ . '/../app/controllers/PublisherController.php';
 require_once __DIR__ . '/../app/controllers/AdminBookController.php';
+require_once __DIR__ . '/../app/controllers/AdminCopyController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -109,6 +110,7 @@ function renderHeader(string $title): void
                         <a href="<?= e(url('/admin/authors')) ?>">Autorzy</a>
                         <a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a>
                         <a href="<?= e(url('/admin/books')) ?>">Książki</a>
+                        <a href="<?= e(url('/admin/copies')) ?>">Egzemplarze</a>
                     <?php endif; ?>
 
                     <a href="<?= e(url('/logout')) ?>">Wyloguj</a>
@@ -225,6 +227,7 @@ switch ($route) {
             <li><a href="<?= e(url('/admin/authors')) ?>">Autorzy</a></li>
             <li><a href="<?= e(url('/admin/publishers')) ?>">Wydawnictwa</a></li>
             <li><a href="<?= e(url('/admin/books')) ?>">Książki</a></li>
+            <li><a href="<?= e(url('/admin/copies')) ?>">Egzemplarze</a></li>
         </ul>
         <?php
         renderFooter();
@@ -309,6 +312,26 @@ switch ($route) {
     case '/admin/books/delete':
         $adminBookController = new AdminBookController($pdo);
         $adminBookController->delete();
+        break;
+
+    case '/admin/copies':
+        $adminCopyController = new AdminCopyController($pdo);
+        $adminCopyController->index();
+        break;
+
+    case '/admin/copies/create':
+        $adminCopyController = new AdminCopyController($pdo);
+        $adminCopyController->create();
+        break;
+
+    case '/admin/copies/edit':
+        $adminCopyController = new AdminCopyController($pdo);
+        $adminCopyController->edit();
+        break;
+
+    case '/admin/copies/delete':
+        $adminCopyController = new AdminCopyController($pdo);
+        $adminCopyController->delete();
         break;
 
     default:
