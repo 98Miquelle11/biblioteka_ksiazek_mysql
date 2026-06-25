@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase /biblioteka_ksiazek_mysql/public/
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^ index.php [QSA,L]
