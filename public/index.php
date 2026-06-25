@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/helpers/security.php';
 require_once __DIR__ . '/../app/helpers/session.php';
+require_once __DIR__ . '/../app/helpers/login_attempts.php';
 
 /*
 |--------------------------------------------------------------------------
