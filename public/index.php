@@ -22,6 +22,7 @@ require_once __DIR__ . '/../app/controllers/ProfileController.php';
 require_once __DIR__ . '/../app/controllers/BookController.php';
 require_once __DIR__ . '/../app/controllers/ReservationController.php';
 require_once __DIR__ . '/../app/controllers/LoanController.php';
+require_once __DIR__ . '/../app/controllers/AuthorController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -103,6 +104,7 @@ function renderHeader(string $title): void
                     <?php if (isAdmin()): ?>
                         <a href="<?= e(url('/admin')) ?>">Panel admina</a>
                         <a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a>
+                        <a href="<?= e(url('/admin/authors')) ?>">Autorzy</a>
                     <?php endif; ?>
 
                     <a href="<?= e(url('/logout')) ?>">Wyloguj</a>
@@ -216,6 +218,7 @@ switch ($route) {
 
         <ul>
             <li><a href="<?= e(url('/admin/loans')) ?>">Wypożyczenia</a></li>
+            <li><a href="<?= e(url('/admin/authors')) ?>">Autorzy</a></li>
         </ul>
         <?php
         renderFooter();
@@ -240,6 +243,26 @@ switch ($route) {
             header('Location: ' . url('/admin/loans'));
             exit;
         }
+        break;
+
+    case '/admin/authors':
+        $authorController = new AuthorController($pdo);
+        $authorController->index();
+        break;
+
+    case '/admin/authors/create':
+        $authorController = new AuthorController($pdo);
+        $authorController->create();
+        break;
+
+    case '/admin/authors/edit':
+        $authorController = new AuthorController($pdo);
+        $authorController->edit();
+        break;
+
+    case '/admin/authors/delete':
+        $authorController = new AuthorController($pdo);
+        $authorController->delete();
         break;
 
     default:
