@@ -18,6 +18,8 @@ require_once __DIR__ . '/../app/helpers/login_attempts.php';
 $pdo = require __DIR__ . '/../config/database.php';
 
 require_once __DIR__ . '/../app/controllers/AuthController.php';
+require_once __DIR__ . '/../app/controllers/ProfileController.php';
+require_once __DIR__ . '/../app/controllers/BookController.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -93,6 +95,8 @@ function renderHeader(string $title): void
 
                 <?php if (isLoggedIn()): ?>
                     <a href="<?= e(url('/profile')) ?>">Profil</a>
+                    <a href="<?= e(url('/profile/edit')) ?>">Edytuj profil</a>
+                    <a href="<?= e(url('/profile/password')) ?>">Zmień hasło</a>
 
                     <?php if (isAdmin()): ?>
                         <a href="<?= e(url('/admin')) ?>">Panel admina</a>
@@ -143,12 +147,7 @@ switch ($route) {
         break;
 
     case '/books':
-        renderHeader('Katalog książek');
-        ?>
-        <h2>Katalog książek</h2>
-        <p>Tutaj później pojawi się lista książek z bazy danych.</p>
-        <?php
-        renderFooter();
+        BookController::index($pdo);
         break;
 
     case '/register':
@@ -172,15 +171,23 @@ switch ($route) {
         break;
 
     case '/profile':
-        requireLogin();
+        ProfileController::show($pdo);
+        break;
 
-        renderHeader('Profil użytkownika');
-        ?>
-        <h2>Profil użytkownika</h2>
-        <p>Ta strona jest dostępna tylko po zalogowaniu.</p>
-        <p>Email użytkownika z sesji: <?= e($_SESSION['user_email'] ?? '') ?></p>
-        <?php
-        renderFooter();
+    case '/profile/edit':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            ProfileController::update($pdo);
+        } else {
+            ProfileController::edit($pdo);
+        }
+        break;
+
+    case '/profile/password':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            ProfileController::updatePassword($pdo);
+        } else {
+            ProfileController::passwordForm();
+        }
         break;
 
     case '/admin':

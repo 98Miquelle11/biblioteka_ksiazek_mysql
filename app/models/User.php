@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/* Ten plik odpowiada za operacje na tabeli "czytelnik". */
-
 class User
 {
     public static function findByEmail(PDO $pdo, string $email): ?array
@@ -17,6 +15,24 @@ class User
 
         $stmt->execute([
             'email' => $email,
+        ]);
+
+        $user = $stmt->fetch();
+
+        return $user ?: null;
+    }
+
+    public static function findById(PDO $pdo, int $id): ?array
+    {
+        $stmt = $pdo->prepare("
+            SELECT *
+            FROM czytelnik
+            WHERE id_czytelnik = :id_czytelnik
+            LIMIT 1
+        ");
+
+        $stmt->execute([
+            'id_czytelnik' => $id,
         ]);
 
         $user = $stmt->fetch();
@@ -56,6 +72,41 @@ class User
             'email' => $data['email'],
             'password_hash' => $data['password_hash'],
             'telefon' => $data['telefon'],
+        ]);
+    }
+
+    public static function updateProfile(PDO $pdo, int $id, array $data): bool
+    {
+        $stmt = $pdo->prepare("
+            UPDATE czytelnik
+            SET 
+                imie = :imie,
+                nazwisko = :nazwisko,
+                email = :email,
+                telefon = :telefon
+            WHERE id_czytelnik = :id_czytelnik
+        ");
+
+        return $stmt->execute([
+            'imie' => $data['imie'],
+            'nazwisko' => $data['nazwisko'],
+            'email' => $data['email'],
+            'telefon' => $data['telefon'],
+            'id_czytelnik' => $id,
+        ]);
+    }
+
+    public static function updatePassword(PDO $pdo, int $id, string $passwordHash): bool
+    {
+        $stmt = $pdo->prepare("
+            UPDATE czytelnik
+            SET password_hash = :password_hash
+            WHERE id_czytelnik = :id_czytelnik
+        ");
+
+        return $stmt->execute([
+            'password_hash' => $passwordHash,
+            'id_czytelnik' => $id,
         ]);
     }
 }
