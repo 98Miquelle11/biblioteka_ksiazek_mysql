@@ -1,33 +1,17 @@
-### Jak np używać PDO w zapytaniach
-
-$stmt = $pdo->prepare("SELECT * FROM czytelnik WHERE email = :email");
-$stmt->execute([
-    'email' => $email,
-]);
-
-$user = $stmt->fetch();
-
-
-### Jak np nie używać
-
-$sql = "SELECT * FROM czytelnik WHERE email = '$email'";
-
-
-
-# Biblioteka MySQL
+# Biblioteka Książek
 
 Projekt systemu bibliotecznego wykonany w PHP, MySQL, HTML, CSS i JavaScript.
 
 ## Wymagania
 
-- XAMPP
-- PHP
-- MySQL / MariaDB
-- phpMyAdmin
-- Visual Studio Code
-- Git
-- GitHub
-- Chrome
+- XAMPP,
+- PHP,
+- MySQL / MariaDB,
+- phpMyAdmin,
+- Visual Studio Code,
+- Git,
+- GitHub,
+- Chrome.
 
 ## Uruchomienie
 
@@ -60,16 +44,16 @@ Użytkownik:
 
 ## Funkcjonalności
 
-- rejestracja i logowanie
-- panel użytkownika
-- zmiana danych i hasła
-- katalog książek
-- wyszukiwanie i filtrowanie
-- paginacja
-- rezerwacje
-- panel administratora
-- CRUD książek
-- CRUD autorów
-- CRUD wydawnictw
-- CRUD egzemplarzy
-- statystyki
+- Rejestracja i logowanie,
+- Panel użytkownika,
+- Zmiana danych i hasła,
+- Katalog książek,
+- Wyszukiwanie i filtrowanie,
+- Paginacja,
+- Rezerwacje,
+- Panel administratora,
+- CRUD książek,
+- CRUD autorów,
+- CRUD wydawnictw,
+- CRUD egzemplarzy,
+- Statystyki.
