@@ -1,59 +1,125 @@
 # Biblioteka Książek
 
-Projekt systemu bibliotecznego wykonany w PHP, MySQL, HTML, CSS i JavaScript.
+Aplikacja webowa umożliwiająca użytkownikom przeglądanie katalogu książek, wyszukiwanie i filtrowanie pozycji, rezerwowanie egzemplarzy oraz zarządzanie własnym kontem. Administrator ma dostęp do dodatkowego panelu umożliwiającego zarządzanie biblioteką.
 
-## Wymagania
+## Technologie
 
-- XAMPP,
-- PHP,
+- PHP wersja 8.0 lub nowsza,
 - MySQL / MariaDB,
-- phpMyAdmin,
-- Visual Studio Code,
-- Git,
-- GitHub,
-- Chrome.
+- HTML5,
+- CSS3,
+- JavaScript,
+- Apache,
+- XAMPP.
+
+## Główne funkcjonalności
+
+- Rejestracja, logowanie i wylogowanie użytkowników,
+- Role użytkownika i administratora,
+- Panel użytkownika,
+- Edycja danych użytkownika,
+- Zmiana hasła,
+- Katalog książek,
+- Wyszukiwanie książek po tytule i autorze,
+- Filtrowanie książek według gatunku, roku wydania i formy egzemplarza,
+- Podgląd szczegółów książki,
+- Podgląd dostępnych egzemplarzy,
+- Rezerwowanie egzemplarzy,
+- Historia wypożyczeń i rezerwacji użytkownika,
+- Panel administratora ze statystykami,
+- Zarządzanie książkami,
+- Zarządzanie autorami,
+- Zarządzanie wydawnictwami,
+- Zarządzanie egzemplarzami,
+- Obsługa wypożyczeń i zwrotów,
+- Automatyczna aktualizacja statusu egzemplarzy,
+- Automatyczne naliczanie kar za opóźnione zwroty,
+- Rejestrowanie zmian statusu egzemplarzy,
+- Tymczasowa blokada konta po kilku nieudanych próbach logowania.
 
 ## Uruchomienie
 
-1. Skopiuj projekt do folderu `htdocs`.
-2. Uruchom Apache i MySQL w XAMPP.
-3. Wejdź do phpMyAdmin:
-   `http://localhost/phpmyadmin`
-4. Zaimportuj:
-   - `database/schema.sql`
-   - `database/seed.sql`
-5. Skopiuj plik:
-   `config/.env.example`
-   jako:
-   `config/.env`
-6. Ustaw dane bazy w `.env`.
-7. Otwórz aplikację:
-   `http://localhost/biblioteka-mysql/public`
+1. Pobierz lub sklonuj repozytorium.
+
+2. Umieść projekt w katalogu `htdocs` XAMPP.
+
+   Katalog projektu powinien nazywać się:
+
+   ```text
+   biblioteka_ksiazek_mysql
+   ```
+
+   Przykładowa lokalizacja:
+
+   ```text
+   C:\xampp\htdocs\biblioteka_ksiazek_mysql
+   ```
+
+3. Uruchom **Apache** i **MySQL** w XAMPP.
+
+4. Otwórz phpMyAdmin:
+
+   ```text
+   http://localhost/phpmyadmin
+   ```
+
+5. Zaimportuj pliki bazy danych w podanej kolejności:
+
+   ```text
+   database/schema.sql
+   database/seed.sql
+   ```
+
+
+6. Skopiuj plik:
+
+   ```text
+   config/.env.example
+   ```
+
+   i zapisz jego kopię jako:
+
+   ```text
+   config/.env
+   ```
+
+7. Ustaw dane połączenia z bazą danych w pliku `config/.env`.
+
+   Dla standardowej konfiguracji XAMPP:
+
+   ```env
+   DB_HOST=localhost
+   DB_NAME=biblioteka
+   DB_USER=root
+   DB_PASS=""
+   DB_CHARSET=utf8mb4
+   APP_URL=http://localhost/biblioteka_ksiazek_mysql/public
+   APP_ENV=local
+   ```
+
+8. Otwórz aplikację w przeglądarce:
+
+   ```text
+   http://localhost/biblioteka_ksiazek_mysql/public/
+   ```
+
 
 ## Dane logowania
 
-Administrator:
+Po zaimportowaniu pliku `database/seed.sql` dostępne są następujące konta testowe.
 
-- email: admin@biblioteka.local
-- hasło: password
+### Administrator
 
-Użytkownik:
+```text
+Email: admin@biblioteka.local
+Hasło: password
+```
 
-- email: anna.kowalska@example.com
-- hasło: password
+### Użytkownik
 
-## Funkcjonalności
+```text
+Email: anna.kowalska@example.com
+Hasło: password
+```
 
-- Rejestracja i logowanie,
-- Panel użytkownika,
-- Zmiana danych i hasła,
-- Katalog książek,
-- Wyszukiwanie i filtrowanie,
-- Paginacja,
-- Rezerwacje,
-- Panel administratora,
-- CRUD książek,
-- CRUD autorów,
-- CRUD wydawnictw,
-- CRUD egzemplarzy,
-- Statystyki.
+Dane logowania służą wyłącznie do lokalnego uruchamiania i testowania projektu.
